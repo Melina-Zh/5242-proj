@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from config import Config
 #from model import DecoderWithAttention, Encoder
-from utils import Load_data
+from utils import *
 from torch.utils.data import DataLoader
 from model import DecoderRNN, EncoderRNN, S2VTAttModel
 import json
@@ -13,9 +13,8 @@ import torch
 import torch.optim as optim
 from torch.nn.utils import clip_grad_value_
 from torch.utils.data import DataLoader
-
-import misc.utils as utils
-
+from torchviz import make_dot
+import hiddenlayer as h
 
 #from misc.rewards import get_self_critical_reward, init_cider_scorer
 from model import DecoderRNN, EncoderRNN, S2VTAttModel
@@ -48,6 +47,7 @@ def val_map5(model, val_data, crit, config):
 def train(train_loader, val_dataloader, crit, model,optimizer, lr_scheduler, config):
     model.train()
     # model = nn.DataParallel(model)
+
     for epoch in range(config.epochs):
         lr_scheduler.step()
 
@@ -76,6 +76,9 @@ def train(train_loader, val_dataloader, crit, model,optimizer, lr_scheduler, con
 
             optimizer.zero_grad()
            # if not sc_flag:
+
+            #print(fc_feats.shape)
+
             seq_probs, _, _, _ = model(fc_feats, config, labels, 'train')
             loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
             '''
@@ -137,7 +140,7 @@ def predict(model, dataset, vocab, config):
         with torch.no_grad():
             seq_prob, seq_preds, all_seq_logprobs, all_seq_preds = model(
                 fc_feats,config = config, mode='inference' )
-        answer,visualize_re = utils.decode_index_into_final_answer(vocab, object, relation, all_seq_preds)
+        answer,visualize_re = decode_index_into_final_answer(vocab, object, relation, all_seq_preds)
 
 
         answer_df = pd.DataFrame({'label': answer})
@@ -152,13 +155,13 @@ def main():
 
     train_dataset = Load_data('train', config)
     train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
-    val_dataset = Load_data('val',config)
+    val_dataset = Load_data('val', config)
     val_dataloader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
     test_dataset = Load_data('test', config)
 
     config.vocab_size = train_dataset.get_vocab_size()
     encoder = EncoderRNN(
-            config.dim_vid ,
+            config.dim_vid + config.c3d_feat_dim,
             config.dim_hidden,
             bidirectional=config.bidirectional,
             input_dropout_p=config.input_dropout_p,
@@ -179,7 +182,7 @@ def main():
 
     if config.use_gpu == True:
         model = model.cuda()
-    crit = utils.LanguageModelCriterion()
+    crit = LanguageModelCriterion()
     #rl_crit = utils.RewardCriterion()
     #criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(

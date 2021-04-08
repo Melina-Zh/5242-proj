@@ -96,9 +96,9 @@ class DecoderRNN(nn.Module):
     def forward(self,
                 encoder_outputs,
                 encoder_hidden,
-                config,
+                config=None,
                 targets=None,
-                mode='train'
+                mode='inference'
                 ):
         """
 
@@ -289,8 +289,8 @@ class S2VTAttModel(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
 
-    def forward(self, vid_feats, config, target_variable=None,
-                mode='train' ):
+    def forward(self, vid_feats, config=None, target_variable=None,
+                mode='inference' ):
         """
 
         Args:
@@ -304,3 +304,4 @@ class S2VTAttModel(nn.Module):
         encoder_outputs, encoder_hidden = self.encoder(vid_feats)
         seq_prob, seq_preds,all_seq_logprobs,all_seq_preds = self.decoder(encoder_outputs, encoder_hidden, config, target_variable, mode)
         return seq_prob, seq_preds,all_seq_logprobs,all_seq_preds
+
