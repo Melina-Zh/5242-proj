@@ -11,7 +11,7 @@ class Config(object):
 
         # Training parameters
         self.max_len= 5
-        self.epochs = 100# number of epochs to train for (if early stopping is not triggered)
+        self.epochs = 1# number of epochs to train for (if early stopping is not triggered)
         self.epochs_since_improvement = 0  # keeps track of number of epochs since there's been an improvement in validation BLEU
         self.batch_size = 128
         self.workers = 1  # for data-loading; right now, only 1 works with h5py
@@ -32,10 +32,11 @@ class Config(object):
         self.input_dropout_p = 0
         self.rnn_type = 'gru'
         self.rnn_dropout_p = 0.5
-        self.learning_rate = 1e-3
+        self.learning_rate = 1e-4
         self.learning_rate_decay_every = 10
-        self.weight_decay = 3e-3
-        self.learning_rate_decay_rate = 1
-        self.grad_clip = 5
+        self.weight_decay = 2e-2
+        self.learning_rate_decay_rate = 0.8
         self.im_word = 256
-        self.c3d_feat_dim = 400
+        self.load_checkpoint = False
+
+
